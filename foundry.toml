@@ -1,0 +1,10 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["lib"]
+test = "test"
+remappings = []
+
+[rpc_endpoints]
+botchain = "https://rpc.botchain.ai"
+bohr = "https://rpc.bohr.life"

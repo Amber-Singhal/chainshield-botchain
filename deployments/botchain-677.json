@@ -1,0 +1,13 @@
+{
+  "network": "BOT Chain Mainnet",
+  "chainId": 677,
+  "rpc": "https://rpc.botchain.ai",
+  "explorer": "https://scan.botchain.ai",
+  "contractName": "ChainShield",
+  "contractAddress": "0x0E62a1e1116084a7B20C1e8155BF5EaE4ed56849",
+  "deployer": "0x1238d1c6EAEA609cAb45D75eABC8FDB95f4047B1",
+  "deployTx": "0xda4d98cb40f03a37bd06c8a4ecfed8360ddc95495fc34937d3143a33588be323",
+  "compilerVersion": "v0.8.36+commit.8a079791",
+  "optimizerRuns": 200,
+  "verified": true
+}

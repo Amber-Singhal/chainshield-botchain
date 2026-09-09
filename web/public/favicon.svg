@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <path class="shield" d="M64 4 C90 6 110 14 116 22 L116 62 C116 92 95 116 64 124 C33 116 12 92 12 62 L12 22 C18 14 38 6 64 4 Z" />
+  <path d="M42 64 L58 80 L88 48" stroke="#c4ff5b" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <style>
+    .shield { fill: #1a1a1a; }
+    @media (prefers-color-scheme: dark) {
+      .shield { fill: #f4ede2; }
+    }
+  </style>
+</svg>
