@@ -16,9 +16,11 @@ import { loadDemo, loadPolicies, submitPolicyForm } from "../lib/policies.js";
 import { loadTimeline } from "../lib/timeline.js";
 import {
   bindWalletEvents,
+  disconnectWallet,
   getConnectedAccount,
   onWalletChange,
   performConnect,
+  refreshWallet,
   updateWalletUI,
 } from "../lib/wallet.js";
 
@@ -67,6 +69,7 @@ function bindActionButtons(): void {
       const account = getConnectedAccount();
       if (account) fillFromAddress(account);
     },
+    "disconnect-wallet": () => disconnectWallet(),
   };
   for (const [action, handler] of Object.entries(map)) {
     document
@@ -101,6 +104,8 @@ function init(): void {
     if (account) fillFromAddress(account);
     void refreshAll();
   });
+  // Re-sync on page load so a connected wallet is shown without another click.
+  void refreshWallet();
   void refreshAll();
 }
 

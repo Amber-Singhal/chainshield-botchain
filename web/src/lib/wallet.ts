@@ -1,4 +1,4 @@
-import { connectWallet, getAccount, getBalance, ensureBotChain, BOT_CHAIN_ID, BOT_EXPLORER } from "./botchain.js";
+import { connectWallet, getAccount, getBalance, BOT_CHAIN_ID, BOT_EXPLORER } from "./botchain.js";
 
 declare global {
   interface Window {
@@ -47,6 +47,27 @@ export async function refreshWallet(): Promise<void> {
 export async function performConnect(): Promise<void> {
   await connectWallet();
   await refreshWallet();
+}
+
+/**
+ * Disconnect the dapp's session. Some wallets support the revoke API; for
+ * others we just clear the frontend state so the user can re-connect.
+ */
+export async function disconnectWallet(): Promise<void> {
+  if (typeof window.ethereum !== "undefined") {
+    try {
+      // EIP-2255 revoke permission, supported by MetaMask and a few others
+      await window.ethereum.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+      });
+    } catch {
+      // wallet doesn't support revocation — just clear app state
+    }
+  }
+  window._connectedAccount = null;
+  window._connectedChainId = null;
+  emit();
 }
 
 export function bindWalletEvents(): void {

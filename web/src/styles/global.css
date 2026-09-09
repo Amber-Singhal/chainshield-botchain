@@ -1225,3 +1225,15 @@ body::after {
 
 /* Small link button */
 .btn-small { font-size: 0.7rem; margin-top: 0.35rem; display: inline-block; }
+
+/* Disconnect button */
+.btn-disconnect {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--paper-soft);
+  margin-left: 0.5rem;
+}
+.btn-disconnect:hover {
+  border-color: var(--paper-faint);
+  color: var(--paper);
+}
