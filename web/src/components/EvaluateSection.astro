@@ -37,8 +37,9 @@
       </div>
       <div class="field-row">
         <div class="field">
-          <label for="evaluate-value">Value (wei)</label>
-          <input id="evaluate-value" name="value" placeholder="1000000000000000000" value="0" required />
+          <label for="evaluate-value">Value (BOT)</label>
+          <input id="evaluate-value" name="value" type="number" step="0.000000000000000001" placeholder="0.5" value="0" required />
+          <span class="field-hint">Enter BOT as a normal number. ChainShield converts it behind the scenes.</span>
         </div>
         <div class="field">
           <label for="evaluate-chainid">Chain ID</label>

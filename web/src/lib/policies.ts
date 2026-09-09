@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { api } from "./api.js";
 import { anchorPillHtml, escapeHtml, formatRules } from "./format.js";
 import { showJsonModal } from "./modal.js";
@@ -51,9 +52,13 @@ function formTokenCaps(form: HTMLFormElement): Partial<Record<Address, string>> 
   if (!raw) return undefined;
   const out: Partial<Record<Address, string>> = {};
   for (const part of raw.split(",")) {
-    const [token, cap] = part.split("=").map((s) => s.trim());
-    if (token && /^0x[0-9a-fA-F]{40}$/.test(token) && /^\d+$/.test(cap)) {
-      out[token.toLowerCase() as Address] = cap;
+    const [token, capBot] = part.split("=").map((s) => s.trim());
+    if (token && /^0x[0-9a-fA-F]{40}$/.test(token) && capBot) {
+      try {
+        out[token.toLowerCase() as Address] = ethers.parseEther(capBot).toString();
+      } catch {
+        // skip invalid cap values
+      }
     }
   }
   return Object.keys(out).length ? out : undefined;

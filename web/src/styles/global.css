@@ -1237,3 +1237,15 @@ body::after {
   border-color: var(--paper-faint);
   color: var(--paper);
 }
+
+/* Why ChainShield section */
+.section-why { border-top: 1px solid var(--rule-soft); padding-top: 3rem; }
+.why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 1.5rem 0; }
+.why-card { background: var(--ink-surface); border: 1px solid var(--rule); padding: 1.5rem; border-radius: 0; }
+.why-num { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); display: block; margin-bottom: 0.75rem; }
+.why-card h3 { font-family: var(--serif); font-size: 1.3rem; margin: 0 0 0.5rem; }
+.why-card p { color: var(--paper-soft); margin: 0; line-height: 1.55; }
+.why-note { background: rgba(196, 255, 91, 0.05); border: 1px solid rgba(196, 255, 91, 0.25); padding: 1rem 1.25rem; margin-top: 1.5rem; }
+.why-note strong { display: block; color: var(--paper); margin-bottom: 0.35rem; }
+.why-note p { color: var(--paper-soft); margin: 0; }
+@media (max-width: 860px) { .why-grid { grid-template-columns: 1fr; } }

@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import type {
   Address,
   ApiResult,
@@ -118,12 +119,12 @@ interface PolicyInputBody {
 function createPolicy(body: PolicyInputBody): ApiResult<Policy | unknown> {
   const issues: Array<{ path: string[]; message: string }> = [];
   if (!isAddress(body.owner)) {
-    issues.push({ path: ["owner"], message: "Expected a 20-byte hex address (0x + 40 chars)." });
+    issues.push({ path: ["owner"], message: "Please enter a valid wallet address that starts with 0x and has 40 characters." });
   }
   const rules = body.rules ?? {};
   if (rules.allowedDestinations !== undefined) {
     if (!Array.isArray(rules.allowedDestinations) || rules.allowedDestinations.some((a) => !isAddress(a))) {
-      issues.push({ path: ["rules", "allowedDestinations"], message: "Every entry must be a 0x address." });
+      issues.push({ path: ["rules", "allowedDestinations"], message: "Each allowed destination must be a valid address starting with 0x." });
     }
   }
   if (rules.forbiddenSelectors !== undefined) {
@@ -131,7 +132,7 @@ function createPolicy(body: PolicyInputBody): ApiResult<Policy | unknown> {
       !Array.isArray(rules.forbiddenSelectors) ||
       rules.forbiddenSelectors.some((s) => typeof s !== "string" || !/^0x[0-9a-fA-F]{8}$/.test(s))
     ) {
-      issues.push({ path: ["rules", "forbiddenSelectors"], message: "Every entry must be a 4-byte selector (0x + 8 hex chars)." });
+      issues.push({ path: ["rules", "forbiddenSelectors"], message: "Each forbidden action must be a 4-byte code starting with 0x and 8 characters long." });
     }
   }
   if (issues.length > 0) {
@@ -171,7 +172,7 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
     verdict = "BLOCK";
     riskScore = Math.max(riskScore, 95);
     rulesMatched.push("forbiddenSelectors");
-    reasons.push(`Selector ${selector} is on the forbidden list.`);
+    reasons.push(`This transaction calls a forbidden function (${selector}), so it is blocked.`);
     const d: Decision = {
       id: crypto.randomUUID(),
       intent,
@@ -191,7 +192,7 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
     verdict = "REQUIRE_HUMAN_CONFIRMATION";
     riskScore = Math.max(riskScore, 70);
     rulesMatched.push("invalidIntentValue");
-    reasons.push(`Intent value "${intent.value}" is not a decimal wei string.`);
+    reasons.push(`The amount entered is not a valid number. Please check the value field.`);
   } else if (policy.rules.maxTransferEth !== undefined) {
     const cap = ethToWei(policy.rules.maxTransferEth);
     if (valueWei > cap) {
@@ -199,7 +200,7 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
       riskScore = Math.max(riskScore, 90);
       rulesMatched.push("maxTransferEth");
       reasons.push(
-        `Transfer of ${weiToEthFloat(valueWei)} BOT exceeds per-tx cap of ${policy.rules.maxTransferEth} BOT.`,
+        `This transfer is for ${weiToEthFloat(valueWei)} BOT, which is more than your ${policy.rules.maxTransferEth} BOT per-transaction limit.`,
       );
     }
   }
@@ -221,7 +222,7 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
       riskScore = Math.max(riskScore, 88);
       rulesMatched.push("maxDailyOutflowEth");
       reasons.push(
-        `Projected 24h outflow ${weiToEthFloat(projected)} BOT exceeds cap of ${policy.rules.maxDailyOutflowEth} BOT.`,
+        `This transaction would push your total BOT sent in the last 24 hours to ${weiToEthFloat(projected)} BOT, above your ${policy.rules.maxDailyOutflowEth} BOT daily limit.`,
       );
     }
   }
@@ -232,7 +233,7 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
       if (verdict === "ALLOW") verdict = "REQUIRE_HUMAN_CONFIRMATION";
       riskScore = Math.max(riskScore, 60);
       rulesMatched.push("allowedDestinations");
-      reasons.push(`Destination ${intent.to} is not on the allowlist.`);
+      reasons.push(`The destination address ${intent.to} is not in your allowed list. Review before approving.`);
     }
   }
 
@@ -247,14 +248,14 @@ export function evaluateIntent(intent: TxIntent, policy: Policy): Decision {
       if (verdict === "ALLOW") verdict = "REQUIRE_HUMAN_CONFIRMATION";
       riskScore = Math.max(riskScore, 70);
       rulesMatched.push("invalidApprovalCap");
-      reasons.push(`Approval cap "${rawCap}" on token ${intent.to} is not a decimal wei string.`);
+      reasons.push(`The approval cap for token ${intent.to} is not set correctly. Review your policy.`);
     } else {
       const amount = decodeUint256(intent.data, 1);
       if (amount !== null && amount > cap) {
         verdict = "BLOCK";
         riskScore = Math.max(riskScore, 92);
         rulesMatched.push("approvalCapByToken");
-        reasons.push(`Approval amount ${amount} on token ${intent.to} exceeds cap of ${cap}.`);
+        reasons.push(`This approval lets the spender take more BOT than your ${ethers.formatEther(cap)} BOT cap on token ${intent.to}.`);
       }
     }
   }
@@ -290,12 +291,12 @@ function handleEvaluate(body: EvaluateBody): ApiResult<Decision | unknown> {
   const issues: Array<{ path: string[]; message: string }> = [];
   const policy = body.policyId ? policies.get(body.policyId) : undefined;
   if (!policy) {
-    issues.push({ path: ["policyId"], message: "Unknown or missing policy id." });
+    issues.push({ path: ["policyId"], message: "Please create or select a policy before evaluating a transaction." });
   }
   const intent = body.intent ?? {};
-  if (!isAddress(intent.from)) issues.push({ path: ["intent", "from"], message: "Expected a 0x address." });
-  if (!isAddress(intent.to)) issues.push({ path: ["intent", "to"], message: "Expected a 0x address." });
-  if (intent.data !== undefined && !isHex(intent.data)) issues.push({ path: ["intent", "data"], message: "Expected hex calldata." });
+  if (!isAddress(intent.from)) issues.push({ path: ["intent", "from"], message: "The 'From' address is not valid. It should start with 0x and have 40 characters." });
+  if (!isAddress(intent.to)) issues.push({ path: ["intent", "to"], message: "The 'To' address is not valid. It should start with 0x and have 40 characters." });
+  if (intent.data !== undefined && !isHex(intent.data)) issues.push({ path: ["intent", "data"], message: "The calldata field must be valid hex, starting with 0x. Leave it as 0x for a simple transfer." });
   if (issues.length > 0) {
     return { ok: false, status: 400, data: { error: "ValidationError", issues } };
   }

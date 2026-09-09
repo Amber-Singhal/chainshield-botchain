@@ -76,7 +76,7 @@ export function intentHashOf(d: Decision): string {
 }
 
 async function getProvider(): Promise<ethers.BrowserProvider> {
-  if (!window.ethereum) throw new Error("No injected wallet found. Install an EVM wallet to use ChainShield.");
+  if (!window.ethereum) throw new Error("Please install MetaMask or another Web3 wallet, then connect to ChainShield.");
   return new ethers.BrowserProvider(window.ethereum);
 }
 
@@ -93,7 +93,7 @@ export async function getBalance(address: string): Promise<string> {
 }
 
 export async function connectWallet(): Promise<string> {
-  if (!window.ethereum) throw new Error("No injected wallet found. Install an EVM wallet to use ChainShield.");
+  if (!window.ethereum) throw new Error("Please install MetaMask or another Web3 wallet, then connect to ChainShield.");
   const provider = new ethers.BrowserProvider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   await ensureBotChain(provider);
@@ -103,7 +103,7 @@ export async function connectWallet(): Promise<string> {
 
 export async function ensureBotChain(provider?: ethers.BrowserProvider): Promise<void> {
   const eth = window.ethereum;
-  if (!eth) throw new Error("No injected wallet found.");
+  if (!eth) throw new Error("Please install MetaMask or another Web3 wallet.");
   const p = provider ?? (await getProvider());
   const network = await p.getNetwork();
   if (Number(network.chainId) === BOT_CHAIN_ID) return;

@@ -1,6 +1,6 @@
+import { ethers } from "ethers";
 import { getConnectedAccount } from "./wallet.js";
 import {
-  explorerTxUrl,
   loadOnChainPolicy,
   setOnChainPolicy,
   type OnChainPolicy,
@@ -21,7 +21,7 @@ const DEFAULT_DEMO: PolicyInput = {
   maxDailyOutflowEth: 3,
   allowedDestinations: [COLD_VAULT],
   forbiddenSelectors: ["0x095ea7b3"],
-  approvalCapByToken: { [TOKEN]: "1000000000000000000000" },
+  approvalCapByToken: { [TOKEN]: ethers.parseEther("1000").toString() },
 };
 
 function parseAddresses(s: string): Address[] {
@@ -43,9 +43,13 @@ function parseSelectors(s: string): `0x${string}`[] {
 function parseTokenCaps(s: string): Partial<Record<Address, string>> {
   const out: Partial<Record<Address, string>> = {};
   for (const part of s.split(",")) {
-    const [token, cap] = part.split("=").map((x) => x.trim());
-    if (token && /^0x[0-9a-fA-F]{40}$/.test(token) && /^\d+$/.test(cap)) {
-      out[token.toLowerCase() as Address] = cap;
+    const [token, capBot] = part.split("=").map((x) => x.trim());
+    if (token && /^0x[0-9a-fA-F]{40}$/.test(token) && capBot) {
+      try {
+        out[token.toLowerCase() as Address] = ethers.parseEther(capBot).toString();
+      } catch {
+        // skip invalid cap values
+      }
     }
   }
   return out;
@@ -53,7 +57,13 @@ function parseTokenCaps(s: string): Partial<Record<Address, string>> {
 
 function tokenCapsString(caps: Partial<Record<Address, string>>): string {
   return Object.entries(caps)
-    .map(([k, v]) => `${k}=${v}`)
+    .map(([k, v]) => {
+      try {
+        return `${k}=${ethers.formatEther(v ?? "0")}`;
+      } catch {
+        return `${k}=${v}`;
+      }
+    })
     .join(", ");
 }
 
@@ -137,7 +147,7 @@ export async function refreshOnChainPolicyCard(): Promise<void> {
 
 export async function saveOnChainPolicyFromForm(form: HTMLFormElement): Promise<void> {
   const account = getConnectedAccount();
-  if (!account) throw new Error("Connect a wallet first.");
+  if (!account) throw new Error("Please connect your wallet first to save a policy on-chain.");
   const input = policyFormToInput(form);
   const txHash = await setOnChainPolicy(input);
   await refreshOnChainPolicyCard();

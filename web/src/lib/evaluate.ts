@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import { api } from "./api.js";
 import { recordDecisionOnChain } from "./botchain.js";
 import { updateDecision } from "./local.js";
@@ -48,12 +49,27 @@ export async function submitEvaluateForm(form: HTMLFormElement): Promise<void> {
   }
 }
 
+function botToWei(bot: string): { ok: true; wei: string } | { ok: false; error: string } {
+  const v = bot.trim();
+  if (v === "" || v === "0") return { ok: true, wei: "0" };
+  try {
+    return { ok: true, wei: ethers.parseEther(v).toString() };
+  } catch {
+    return { ok: false, error: `“${v}” is not a valid BOT amount. Use a normal number like 0.5 or 1.` };
+  }
+}
+
 async function evaluateWithPolicy(form: HTMLFormElement): Promise<{ ok: boolean; status: number; data: unknown }> {
   const policyId = getField(form, "policyId");
+  const valueBot = getField(form, "value") || "0";
+  const converted = botToWei(valueBot);
+  if (!converted.ok) {
+    return { ok: false, status: 400, data: { error: "ValidationError", issues: [{ path: ["value"], message: converted.error }] } };
+  }
   const intent = {
     from: getField(form, "from") as `0x${string}`,
     to: getField(form, "to") as `0x${string}`,
-    value: getField(form, "value") || "0",
+    value: converted.wei,
     data: (getField(form, "data") || "0x") as `0x${string}`,
     chainId: Number(getField(form, "chainId") || "677"),
   };
@@ -245,7 +261,7 @@ export function presetSafeTransfer(): void {
   setEvaluateForm({
     from: TREASURY,
     to: COLD_VAULT,
-    value: "500000000000000000",
+    value: "0.5",
     data: "0x",
   });
 }
@@ -254,7 +270,7 @@ export function presetOverCap(): void {
   setEvaluateForm({
     from: TREASURY,
     to: COLD_VAULT,
-    value: "5000000000000000000",
+    value: "5",
     data: "0x",
   });
 }
@@ -274,7 +290,7 @@ export function presetUnknownDest(): void {
   setEvaluateForm({
     from: TREASURY,
     to: ATTACKER,
-    value: "100000000000000000",
+    value: "0.1",
     data: "0x",
   });
 }
